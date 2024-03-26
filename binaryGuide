@@ -1,0 +1,47 @@
+Guide to solving binary exploitation problems
+
+First, you should check the permissions you have and checksec output
+
+If you have ret2win, good for you!
+If not, you have to try ret2libc.
+
+First, set the context using elf = context.binary = ELF(exe, checksec=False), OR always, ALWAYS use p64 or p32 depending on the architecture.
+
+You know that the GOT values are fixed, since this is the case, you can actually search the values of these pointers to the GOT of certain functions like printf / puts.
+Then you take these values and you do puts(puts) -> THIS WILL PRINT THE VALUE IN THE PLT, which is the actual offset in the libc library .
+
+For this, the order might be: pop_rdi, puts_GOT , puts_GOT
+
+THis will allow you to determine the version of the libc library through online tools.
+
+THE GOT: - the place with the actual addresses of the functions it links with in the local libc library
+	- the GOT is a part of the library. So it has fixed offset away from the base, it doesn't change.
+	- by leaking a GOT address you find your way into libc, get the address of that function in libc.
+
+THE PLT: - contains addresses to get to the GOT corresponded of the functions/ or resolves the GOT address and then jumps to it in the libc library.
+
+
+So you have to leak the address from the GOT table using :
+	elf.got['printf']
+
+
+When you leaked that address, you take THE LAST THREE CHARACTERS and search it up in the libc search library online -> TRY ALL THE libc versions, download them locally, and load the as a separate elf. SET THE libc base address to that of leaked_function - libc.sym['leaked_function'].
+
+Then create a rop object from them:
+
+
+
+
+r.execve(next(libc.search(b"/bin/sh\x00")),0,0)
+payload = flat({
+    offset:[
+        r.chain(),
+    ]
+})
+
+
+Then send the payload and you should be done.
+---------------------------------------------------------------------------------------
+
+
+Use most of the time dynamic operations on the file!!! It's easier and things may not be the same in both environments 100%. REMEMBER, you cannot access the value from GOT, but if you print the value from THAT ADDRESS in the GOT, you get the address of the function in LIBC.
