@@ -1,8 +1,3 @@
-<style>
-    code{
-    background-color: rgba(245, 178, 34, 0.5)
-    }
-</style>
 # PRIVILEGE ESCALATION FOR BEGGINERS
 
 1. Check if you can crack a password using `johntheripper`
